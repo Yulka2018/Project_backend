@@ -55,15 +55,14 @@ sequelize.sync();
 console.log (Costs.prototype)
 
 const config = {
-  secret: `buhfghtcnjkjd` //тот самый секретный ключ, которым подписывается каждый токен, выдаваемый клиенту
+  secret: `buhfghtcnjkjd`
 }
 
 function jwtWare() {
   const { secret } = config;
   console.log(config, secret)
-  return expressJwt({ secret }).unless({ //блюдет доступ к приватным роутам
+  return expressJwt({ secret }).unless({ 
       path: [
-          // public routes that don't require authentication
           '/users', '/authenticate', '/categories',
       ]
   });
@@ -73,16 +72,12 @@ function jwtWare() {
 
 function errorHandler(err, req, res, next) {
   if (typeof (err) === 'string') {
-      // custom application error
       return res.status(400).json({ message: err });
   }
 
-  if (err.name === 'UnauthorizedError') { //отлавливает ошибку, высланную из expressJwt
-      // jwt authentication error
+  if (err.name === 'UnauthorizedError') { 
       return res.status(401).json({ message: 'Invalid Token' });
   }
-
-  // default to 500 server error
   return res.status(500).json({ message: err.message });
 }
 
@@ -110,7 +105,7 @@ app.post('/income', async function(req, res){
   await income.setCategory(categories);
   let user = await User.findOne({where: {nick : req.body.user}})
   await income.setUser(user)
-  res.status(201).send(req.body);
+  res.status(201).send({message: 'Income successfully added'});
 })
 
 app.get('/income', async function(req, res){
@@ -133,11 +128,12 @@ app.post('/costs', async function(req, res){
 })
 
 app.put('/costs' , async function (req, res){
-  console.log(req.body)
-  let [categories, isCreate] = await Categories.findOne({where: {name: req.body.categories}});
+  console.log(req.body);
+  let [categories, isCreate] = await Categories.findOrCreate({where: {name: req.body.categories}});
+  console.log(categories);
   let cost = await Costs.update( {CategoryId: categories.id, costsSum: req.body.sum },{
     where: {id: req.body.id}
-  })
+  });
   res.status(201).send(cost)
 })
 
@@ -154,7 +150,7 @@ app.post('/categories', async function(req, res){
     income: req.body.income,
     }
   })
-  res.status(201).send(req.body);
+  res.status(201).send({message: 'Category successfully added'});
 })
 
 
@@ -171,13 +167,13 @@ app.post('/users', async function(req,res){
   }
   let hashPass = await hash(req.body.pass)
   let userFind = await User.findOne({where: {nick: req.body.nick}})
-  userFind ? res.status(400).json({message: 'Nick is already in use.'}):
+  userFind ? res.status(400).json({message: 'Nick is already in use!'}):
   await User.create({
       nick: req.body.nick,
       email: req.body.email,
       pass: hashPass,
   })
-  res.json({message: 'Congratulation!!!!'})
+  res.json({message: 'Congratulation! Please Log in'})
 })
 
 async function authenticate({ nick, pass }) { //контроллер авторизации
