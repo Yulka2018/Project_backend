@@ -105,7 +105,7 @@ app.post('/income', async function(req, res){
   await income.setCategory(categories);
   let user = await User.findOne({where: {nick : req.body.user}})
   await income.setUser(user)
-  res.status(201).send({message: 'Income successfully added'});
+  res.status(201).send({msgIncome: 'Income successfully added'});
 })
 
 app.get('/income', async function(req, res){
@@ -115,6 +115,7 @@ app.get('/income', async function(req, res){
 
 
 app.post('/costs', async function(req, res){
+  console.log(req.body)
   let costs = await Costs.create({
     date: req.body.date,
     costsSum: req.body.sum,
@@ -150,7 +151,7 @@ app.post('/categories', async function(req, res){
     income: req.body.income,
     }
   })
-  res.status(201).send({message: 'Category successfully added'});
+  res.status(201).send({msgCategory: 'Category successfully added'});
 })
 
 
@@ -176,16 +177,15 @@ app.post('/users', async function(req,res){
   res.json({message: 'Congratulation! Please Log in'})
 })
 
-async function authenticate({ nick, pass }) { //контроллер авторизации
+async function authenticate({ nick, pass }) { 
   //console.log(nick, pass)
   let user = await User.findOne({ where: {nick: nick }})
   if (user){
   let isValidPass = await bcrypt.compare(pass, user.pass)
    if (isValidPass) {
-       const token = jwt.sign({ sub: user.id }, config.secret); //подписывам токен нашим ключем
+       const token = jwt.sign({ sub: user.id }, config.secret); 
        const {id, nick, email, ...rest} = user
-      // console.log()
-       return { //отсылаем интересную инфу
+       return {
            nick, email,
            token
        };
